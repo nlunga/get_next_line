@@ -6,36 +6,66 @@
 /*   By: nlunga <marvin@42.fr>                      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/06/19 14:24:02 by nlunga            #+#    #+#             */
-/*   Updated: 2019/06/22 10:18:13 by nlunga           ###   ########.fr       */
+/*   Updated: 2019/06/29 13:54:17 by nlunga           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
-#include "./libft/libft.h"
-#define BUFF_SIZE 32
-/*
+
+int		find_line(char *buf)
+{
+	int i;
+
+	i = 0;
+	while (buf[i] && buf[i] != '\n')
+		i++;
+	if (buf[i] == '\n')
+		return (1);
+	return (0);
+}
+
+int		get_line(const int fd, char *buf, char *ptr[fd])
+{
+	int			rn;
+	char		*tmp_str;
+
+	while ((find_line(buf) != 1) && ((rn = read(fd, buf, BUFF_SIZE)) > 0))
+	{
+		buf[rn] = '\0';
+		tmp_str = ptr[fd];
+		ptr[fd] = ft_strjoin(tmp_str, buf);
+		ft_strdel(&tmp_str);
+	}
+	ft_strdel(&buf);
+	if (rn < 0)
+		return (-1);
+	return (1);
+}
+
 int		get_next_line(const int fd, char **line)
 {
+	int			rn;
+	char		*tmp_str;
+	static char *ptr[2147483647];
+	char		*buf;
+	char		*str;
 
-}*/
-
-int main(void)
-{
-	int ret;
-	char buf[BUFF_SIZE];
-	
-	while (1)
+	if (fd < 0 || !line || BUFF_SIZE < 1)
+		return (-1);
+	buf = ft_strnew(BUFF_SIZE);
+	if (!ptr[fd])
+		ptr[fd] = ft_strnew(0);
+	if ((rn = get_line(fd, buf, ptr)) == -1)
+		return (-1);
+	if ((str = ft_strchr(ptr[fd], '\n')))
 	{
-		ret = read(0, buf, BUFF_SIZE);
-		if(ret < BUFF_SIZE)
-		{
-			buf[ret] = '\0';
-			ft_putendl(buf);
-			break;
-		}
-		else
-			ft_putendl(buf);
+		*line = ft_strsub(ptr[fd], 0, str - ptr[fd]);
+		tmp_str = ptr[fd];
+		ptr[fd] = ft_strdup(str + 1);
+		ft_strdel(&tmp_str);
+		return (1);
 	}
-	//sleep(20);
-	return (0);
+	*line = ft_strdup(ptr[fd]);
+	ft_strdel(&ptr[fd]);
+	return (ft_strlen(*line) > 0 ? 1 : 0);
 }
